@@ -1,8 +1,9 @@
-#include "bits/stdc++.h"
+#include <complex>
+#include <iostream>
+#include <vector>
+#include <cmath>
 
-using namespace std;
-
-typedef complex<long double> comp;
+typedef std::complex<long double> comp;
 
 long long nextPowerOfTwo(long long n) {
     n--;
@@ -16,7 +17,7 @@ long long nextPowerOfTwo(long long n) {
     return n;
 }
 
-void fft(vector<comp> &p, comp w, vector<vector<vector<comp>>> &buff){
+void fft(std::vector<comp> &p, comp w, std::vector<std::vector<std::vector<comp>>> &buff){
     if(p.size() == 1){
         return;
     }
@@ -43,8 +44,8 @@ comp get_w(long long n){
     return comp(cos(2*M_PI / (long double)n), sin(2*M_PI / (long double)n));
 }
 
-vector<comp> evalute(vector<long long> &p, vector<vector<vector<comp>>> &buff){
-    vector<comp> _p(p.size());
+std::vector<comp> evalute(std::vector<long long> &p, std::vector<std::vector<std::vector<comp>>> &buff){
+    std::vector<comp> _p(p.size());
     for(long long i = 0; i < p.size(); ++i){
         _p[i] = comp(p[i], 0);
     }
@@ -52,9 +53,9 @@ vector<comp> evalute(vector<long long> &p, vector<vector<vector<comp>>> &buff){
     return _p;
 }
 
-vector<long long> interpolate(vector<comp> &p, vector<vector<vector<comp>>> &buff){
+std::vector<long long> interpolate(std::vector<comp> &p, std::vector<std::vector<std::vector<comp>>> &buff){
     fft(p, get_w(-p.size()), buff);
-    vector<long long> _p(p.size());
+    std::vector<long long> _p(p.size());
     for(long long i = 0; i < p.size(); ++i){
         _p[i] = round(p[i].real()/(long double)p.size());
     }
@@ -62,7 +63,7 @@ vector<long long> interpolate(vector<comp> &p, vector<vector<vector<comp>>> &buf
 }
 
 struct wide_int{
-    vector<long long> val;
+    std::vector<long long> val;
     bool f;
     wide_int(){}
     wide_int(long long x) {
@@ -81,16 +82,6 @@ struct wide_int{
     void resize(long long n) {
         while(size() < n){
             val.push_back(0);
-        }
-    }
-    void print(){
-        if(f){
-            cout << "-";
-        }
-        long long i = val.size() - 1;
-        for(;i > 0 and val[i] == 0; i--){}
-        for(; i >= 0; --i){
-            cout << val[i];
         }
     }
     void carry() {
@@ -112,11 +103,23 @@ struct wide_int{
     }
 };
 
+std::ostream& operator<<(std::ostream &cout, wide_int n) {
+    if(n.f){
+        std::cout << "-";
+    }
+    long long i = n.val.size() - 1;
+    for(;i > 0 and n.val[i] == 0; i--){}
+    for(; i >= 0; --i){
+        std::cout << n.val[i];
+    }
+    return cout;
+}
+
 bool operator<(wide_int a, wide_int b) {
     if(a.f != b.f) {
         return a.f;
     }
-    long long sz = nextPowerOfTwo(max(a.size(), b.size()));
+    long long sz = nextPowerOfTwo(std::max(a.size(), b.size()));
     a.resize(sz);
     b.resize(sz);
     for(long long i = sz - 1; i >= 0; i--) {
@@ -134,7 +137,7 @@ bool operator>(wide_int a, wide_int b) {
     if(a.f != b.f) {
         return !a.f;
     }
-    long long sz = nextPowerOfTwo(max(a.size(), b.size()));
+    long long sz = nextPowerOfTwo(std::max(a.size(), b.size()));
     a.resize(sz);
     b.resize(sz);
     for(long long i = sz - 1; i >= 0; i--) {
@@ -152,7 +155,7 @@ bool operator==(wide_int a, wide_int b) {
     if(a.f != b.f) {
         return false;
     }
-    long long sz = nextPowerOfTwo(max(a.size(), b.size()));
+    long long sz = nextPowerOfTwo(std::max(a.size(), b.size()));
     a.resize(sz);
     b.resize(sz);
     for(long long i = sz - 1; i >= 0; i--) {
@@ -172,7 +175,7 @@ bool operator>=(wide_int a, wide_int b) {
 }
 
 wide_int operator+(wide_int a, wide_int b) {
-    long long sz = nextPowerOfTwo(max(a.size(), b.size()) + 1);
+    long long sz = nextPowerOfTwo(std::max(a.size(), b.size()) + 1);
     a.resize(sz);
     b.resize(sz);
     wide_int res = 0;
@@ -199,7 +202,7 @@ wide_int operator+(wide_int a, wide_int b) {
 }
 
 wide_int operator-(wide_int a, wide_int b) {
-    long long sz = nextPowerOfTwo(max(a.size(), b.size()) + 1);
+    long long sz = nextPowerOfTwo(std::max(a.size(), b.size()) + 1);
     a.resize(sz);
     b.resize(sz);
     wide_int res = 0;
@@ -225,22 +228,32 @@ wide_int operator-(wide_int a, wide_int b) {
     return res;
 }
 
+wide_int operator++(wide_int &a){
+    a = a + 1;
+    return a;
+}
+
+wide_int operator--(wide_int &a){
+    a = a - 1;
+    return a;
+}
+
 wide_int operator*(wide_int a, wide_int b){
     long long sz = nextPowerOfTwo(a.size() + b.size() + 1);
     a.resize(sz);
     b.resize(sz);
-    vector<vector<vector<comp>>> buff((long long)(log2(sz))+1, vector<vector<comp>>(2));
+    std::vector<std::vector<std::vector<comp>>> buff((long long)(log2(sz))+1, std::vector<std::vector<comp>>(2));
     for(long long i = 0; i < buff.size(); ++i){
         buff[i][0].resize(1ll<<i);
         buff[i][1].resize(1ll<<i);
     }
-    vector<comp> _a = evalute(a.val, buff);
-    vector<comp> _b = evalute(b.val, buff);
-    vector<comp> _res(a.val.size());
+    std::vector<comp> _a = evalute(a.val, buff);
+    std::vector<comp> _b = evalute(b.val, buff);
+    std::vector<comp> _res(a.val.size());
     for(long long i = 0; i < _res.size(); ++i){
         _res[i] = _a[i] * _b[i];
     }
-    vector<long long> res = interpolate(_res, buff);
+    std::vector<long long> res = interpolate(_res, buff);
     wide_int wi_res;
     wi_res.val = res;
     wi_res.f = a.f ^ b.f;
@@ -281,12 +294,4 @@ wide_int operator^(wide_int a, wide_int n){
         n = n / 2;
     }
     return res;
-}
-
-signed main(){
-    wide_int a, b, c;
-    a = wide_int(2);
-    b = wide_int(128);
-    c = a^b;
-    c.print();
 }
